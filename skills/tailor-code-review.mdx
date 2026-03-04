@@ -1,0 +1,241 @@
+---
+title: tailor-code-review
+description: Multi-agent code review for git branches using local git only
+---
+
+# tailor-code-review
+
+Performs an automated, multi-agent code review of your current git branch changes against the base branch (main/master/develop).
+
+Works entirely with local git — no GitHub CLI or PR required.
+
+## Installation
+
+```bash
+npx @tailorhub/skills@latest add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review
+```
+
+## What It Checks
+
+The skill analyzes your branch changes across four critical dimensions:
+
+<CardGroup cols={2}>
+  <Card title="Bugs & Logic" icon="bug">
+    - Off-by-one errors
+    - Null/undefined dereferences
+    - Race conditions and async handling
+    - Incorrect error handling
+  </Card>
+  
+  <Card title="Security" icon="shield">
+    - Injection vulnerabilities (SQL, XSS, command)
+    - Hardcoded secrets and credentials
+    - Insecure defaults (weak crypto, missing auth)
+    - Unsafe operations (eval, exec, etc.)
+  </Card>
+  
+  <Card title="Critical Issues" icon="triangle-exclamation">
+    - Data loss risks
+    - Breaking API changes
+    - Crash-prone config changes
+    - Performance regressions
+  </Card>
+  
+  <Card title="Guidelines" icon="book">
+    - Compliance with AGENTS.md / CLAUDE.md
+    - Naming conventions
+    - Architecture rules
+    - Required/forbidden patterns
+  </Card>
+</CardGroup>
+
+## Output Format
+
+Reviews are saved to `.reviews/<branch>_<timestamp>.md` at the repository root.
+
+<Warning>
+Ensure `.reviews/` is in your `.gitignore` to avoid committing review files.
+</Warning>
+
+### Example Output Path
+
+For branch `feat/auth-refactor` reviewed on February 19, 2026 at 1:45 PM:
+
+```
+.reviews/feat-auth-refactor_February-19-2026-at-1.45-PM.md
+```
+
+### Report Structure
+
+<Tabs>
+  <Tab title="No Issues">
+    ```markdown
+    # Branch Review — feat/auth-refactor
+
+    **Date:** February 19 2026 at 1:45 PM
+    **Branch:** `feat/auth-refactor`
+    **Base:** `main`
+    **Changed files:** 8
+
+    **Summary:** Refactors authentication middleware to use JWT tokens
+
+    ---
+
+    ## No issues found
+
+    No critical issues found. Checked for bugs, security vulnerabilities, breaking changes, and guideline compliance.
+    ```
+  </Tab>
+
+  <Tab title="With Issues">
+    Example report with security and bug findings:
+
+    ```markdown
+    # Branch Review — feat/auth-refactor
+
+    **Date:** February 19 2026 at 1:45 PM
+    **Branch:** `feat/auth-refactor`
+    **Base:** `main`
+    **Changed files:** 8
+    **Issues found:** 2
+
+    **Summary:** Refactors authentication middleware to use JWT tokens
+
+    ---
+
+    ## Issues
+
+    ### 1. [SECURITY] Hardcoded JWT secret in middleware
+
+    The JWT secret is hardcoded in the middleware file instead of loaded from environment variables.
+
+    **File:** `src/middleware/auth.ts`, line ~42
+    **Confidence:** 95/100
+
+    ### 2. [BUG] Missing null check after token decode
+
+    The decoded token is used without checking if decode returned null.
+
+    **File:** `src/middleware/auth.ts`, line ~58
+    **Confidence:** 85/100
+
+    ## Categories
+
+    - BUG — logic or runtime error
+    - SECURITY — vulnerability or unsafe pattern
+    - CRITICAL — breaking change or data loss risk
+    - GUIDELINE — violates AGENTS.md / CLAUDE.md rule
+    ```
+  </Tab>
+</Tabs>
+
+## Confidence Scoring
+
+Every issue is scored 0-100 for confidence. Only issues scoring ≥75 are included in the final report.
+
+| Score | Meaning |
+|-------|----------|
+| 0 | False positive — doesn't hold up to scrutiny or is pre-existing |
+| 25 | Possibly real, but unverified or very minor |
+| 50 | Likely real, but a nitpick or low-impact |
+| 75 | High confidence — verified, important, will occur in practice |
+| 100 | Certain — will definitely occur, high severity |
+
+<Note>
+For guideline issues, the scorer confirms the guideline file explicitly states the rule before scoring ≥75.
+</Note>
+
+## How It Works
+
+The skill uses a multi-agent workflow to ensure thorough coverage:
+
+<Steps>
+  <Step title="Verify Git Context">
+    - Confirm the directory is a git repository
+    - Get current branch name
+    - Prevent running on base branches (main/master/develop)
+    - Determine the base branch to compare against
+    - Collect diff and changed files
+  </Step>
+  
+  <Step title="Collect Repo Context">
+    - Search for `AGENTS.md` and `CLAUDE.md` files
+    - Read files from repo root and directories with changes
+    - Extract repository-specific guidelines and conventions
+  </Step>
+  
+  <Step title="Summarize Changes">
+    - Generate a plain-English summary of the diff
+    - Detect primary languages and frameworks
+  </Step>
+  
+  <Step title="Parallel Review Agents">
+    Launch 4 parallel Sonnet agents:
+    
+    **Agent 1 — Bug & Logic Analysis**
+    - Off-by-one errors, null dereferences
+    - Race conditions, missing awaits
+    - Variable scoping issues
+    - Incorrect error handling
+    
+    **Agent 2 — Security Vulnerabilities**
+    - Injection risks (SQL, command, XSS, path traversal)
+    - Hardcoded secrets
+    - Insecure defaults
+    - Unsafe operations
+    
+    **Agent 3 — Critical & Breaking Changes**
+    - Data loss risks
+    - Breaking API changes
+    - Crash-prone config changes
+    - Performance regressions
+    
+    **Agent 4 — Repo Guideline Compliance**
+    - Check violations of AGENTS.md / CLAUDE.md rules
+    - Only flag explicitly documented guidelines
+  </Step>
+  
+  <Step title="Score Each Issue">
+    - Launch parallel Haiku agents for each issue
+    - Score on 0-100 scale based on severity and confidence
+    - Verify guideline issues against actual guideline files
+  </Step>
+  
+  <Step title="Filter and Write Report">
+    - Discard issues with score less than 75
+    - Generate sanitized filename from branch name and timestamp
+    - Create `.reviews/` directory if needed
+    - Write Markdown report with all high-confidence issues
+  </Step>
+</Steps>
+
+## False Positive Prevention
+
+The skill is designed to avoid common false positives:
+
+<Accordion title="What the skill WON'T flag">
+  - Pre-existing issues not touched by the diff
+  - Issues caught by linters, type-checkers, or compilers
+  - Stylistic preferences not in AGENTS.md / CLAUDE.md
+  - Intentional behavior changes (based on the summary)
+  - Pedantic nitpicks a senior engineer wouldn't raise
+  - Issues on lines not modified by the diff
+</Accordion>
+
+## Usage Example
+
+Simply invoke the skill when you want to review your current branch:
+
+```
+Review my branch changes
+```
+
+The AI will:
+1. Detect you're using the `tailor-code-review` skill
+2. Run the multi-agent review workflow
+3. Save the report to `.reviews/`
+4. Display the report path
+
+<Note>
+The skill works best on feature branches with focused changes. For large refactors, consider reviewing in smaller chunks.
+</Note>

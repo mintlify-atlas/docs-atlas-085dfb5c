@@ -1,0 +1,156 @@
+---
+title: "Installation Targets"
+description: "Configure where TailorHub skills are installed with target options"
+---
+
+## Overview
+
+The TailorHub Skills CLI supports installing skills to multiple AI coding environments. You can control where skills are installed using the `--target` flag.
+
+## Available Targets
+
+The CLI supports three target options:
+
+| Target | Description | Installation Path |
+|--------|-------------|------------------|
+| `claude` | Claude Code environment | `~/.claude/skills` |
+| `codex` | Codex environment | `~/.codex/skills` |
+| `both` | Both environments (default) | Both paths above |
+
+<Note>
+The CLI automatically creates the target skills directories if they don't exist.
+</Note>
+
+## Default Behavior
+
+If you don't specify a `--target` flag, the CLI defaults to `both`, installing the skill in both Claude Code and Codex:
+
+```bash
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review
+# Installs to both ~/.claude/skills and ~/.codex/skills
+```
+
+## Using the Target Flag
+
+### Install to a Single Target
+
+Install only to Codex:
+
+```bash
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review --target codex
+```
+
+Install only to Claude Code:
+
+```bash
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-mermaid-to-drawio --target claude
+```
+
+### Update Skills on Specific Targets
+
+Update all skills in Claude Code only:
+
+```bash
+npx @tailorhub/skills update --target claude
+```
+
+Update a specific skill on both targets:
+
+```bash
+npx @tailorhub/skills update tailor-code-review --target both
+```
+
+### Remove Skills from Specific Targets
+
+Remove a skill from Codex only:
+
+```bash
+npx @tailorhub/skills remove tailor-code-review --target codex
+```
+
+Remove from both targets:
+
+```bash
+npx @tailorhub/skills remove tailor-code-review --target both
+```
+
+## Partial Success Handling
+
+When using `--target both` (or omitting the flag), the CLI handles partial failures gracefully:
+
+- **One target succeeds, one fails**: The command is considered successful
+- **Results summary**: The CLI prints detailed per-target results showing what succeeded or failed
+- **Exit code**: The command only fails if **all** requested targets fail
+
+### Example Output
+
+```bash
+$ npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review --target both
+
+Installing "tailor-code-review" for targets: claude, codex
+
+Results:
+  [claude] installed -> /home/user/.claude/skills/tailor-code-review/
+  [codex] failed: Could not fetch skill from GitHub API: ...
+
+Installation completed with partial success.
+Restart Claude Code to apply changes.
+```
+
+<Info>
+Partial success means you can continue working with the successfully installed target while troubleshooting the failed one.
+</Info>
+
+## Target-Specific Directories
+
+The CLI uses the following directory structure for each target:
+
+<CodeGroup>
+```bash Claude Code
+~/.claude/skills/
+├── tailor-code-review/
+│   ├── SKILL.md
+│   ├── AGENTS.md
+│   ├── .source.json
+│   └── agents/
+│       └── openai.yaml
+└── tailor-mermaid-to-drawio/
+    ├── SKILL.md
+    ├── .source.json
+    ├── agents/
+    │   └── openai.yaml
+    └── references/
+        ├── azure-icons.md
+        └── aws-icons.md
+```
+
+```bash Codex
+~/.codex/skills/
+├── tailor-code-review/
+│   ├── SKILL.md
+│   ├── AGENTS.md
+│   ├── .source.json
+│   └── agents/
+│       └── openai.yaml
+└── tailor-mermaid-to-drawio/
+    ├── SKILL.md
+    ├── .source.json
+    ├── agents/
+    │   └── openai.yaml
+    └── references/
+        ├── azure-icons.md
+        └── aws-icons.md
+```
+</CodeGroup>
+
+## After Installation
+
+After installing, updating, or removing skills, you must restart the corresponding application(s) for changes to take effect:
+
+- **Claude Code**: Restart the Claude Code application
+- **Codex**: Restart the Codex application
+- **Both**: Restart both applications
+
+<Note>
+The CLI will automatically remind you which applications need to be restarted based on successful operations.
+</Note>

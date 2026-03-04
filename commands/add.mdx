@@ -1,0 +1,183 @@
+---
+title: 'add'
+description: 'Install a skill from GitHub to Claude Code and/or Codex'
+---
+
+## Syntax
+
+```bash
+npx @tailorhub/skills add <github-skill-url> [--target claude|codex|both]
+```
+
+## Description
+
+The `add` command installs a skill from a GitHub repository URL to your local skills directory. It downloads all skill files recursively (including subdirectories like `agents/` and `references/`) and saves source metadata for future updates.
+
+## Parameters
+
+<ParamField path="github-skill-url" type="string" required>
+  GitHub URL to the skill directory.
+  
+  **Format:** `https://github.com/<owner>/<repo>/<skill>`
+  
+  The skill path can include subdirectories (e.g., `tailor-code-review` or `nested/skill/path`).
+</ParamField>
+
+## Options
+
+<ParamField path="--target" type="string" default="both">
+  Target environment(s) to install the skill.
+  
+  **Valid values:**
+  - `claude` - Install to `~/.claude/skills`
+  - `codex` - Install to `~/.codex/skills`
+  - `both` - Install to both Claude Code and Codex (default)
+  
+  If not specified, defaults to `both`.
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+
+```bash Default (both targets)
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review
+```
+
+```bash Codex only
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review --target codex
+```
+
+```bash Claude Code only
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-mermaid-to-drawio --target claude
+```
+
+```bash Skill with nested folders
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-mermaid-to-drawio --target both
+```
+
+</CodeGroup>
+
+## Output Messages
+
+### Success (single target)
+
+```
+Installing "tailor-code-review" for targets: codex
+Fetching skill "tailor-code-review" from TailorHub-Mad/ai-skills for codex...
+  Downloading SKILL.md...
+  Downloading config.json...
+
+Results:
+  [codex] installed -> /home/user/.codex/skills/tailor-code-review/
+Restart Codex to apply changes.
+```
+
+### Success (both targets)
+
+```
+Installing "tailor-code-review" for targets: claude, codex
+Fetching skill "tailor-code-review" from TailorHub-Mad/ai-skills for claude...
+  Downloading SKILL.md...
+Fetching skill "tailor-code-review" from TailorHub-Mad/ai-skills for codex...
+  Downloading SKILL.md...
+
+Results:
+  [claude] installed -> /home/user/.claude/skills/tailor-code-review/
+  [codex] installed -> /home/user/.codex/skills/tailor-code-review/
+Restart Claude Code and Codex to apply changes.
+```
+
+### Partial success
+
+```
+Installing "tailor-code-review" for targets: claude, codex
+...
+Results:
+  [claude] installed -> /home/user/.claude/skills/tailor-code-review/
+  [codex] failed: Could not fetch skill from GitHub API: HTTP 404
+Restart Claude Code to apply changes.
+Installation completed with partial success.
+```
+
+## Partial Success Behavior
+
+<Note>
+When using `--target both` (or no `--target`), one target may fail while the other succeeds.
+
+- The command is considered **successful** if at least one target succeeds
+- The CLI prints a per-target result summary
+- The command **fails** only if all requested targets fail
+</Note>
+
+## Error Conditions
+
+<Warning>
+**Invalid URL format:**
+```
+Error: Invalid skill URL. Expected format: https://github.com/<owner>/<repo>/<skill>
+```
+The URL must include owner, repository, and skill path segments.
+</Warning>
+
+<Warning>
+**Invalid target value:**
+```
+Error: Invalid --target value "invalid". Use claude, codex, or both.
+```
+Only `claude`, `codex`, or `both` are accepted.
+</Warning>
+
+<Warning>
+**Missing skill URL:**
+```
+Usage:
+  npx @tailorhub/skills add <github-skill-url> [--target claude|codex|both]
+```
+The skill URL is required for the `add` command.
+</Warning>
+
+<Warning>
+**Network/API errors:**
+```
+Results:
+  [claude] failed: Could not fetch skill from GitHub API: HTTP 404 for https://api.github.com/...
+Error: installation failed for all requested targets.
+```
+Occurs when the GitHub API cannot fetch the skill (404, network errors, rate limits, etc.).
+</Warning>
+
+<Warning>
+**Invalid skill name:**
+```
+Results:
+  [codex] failed: Invalid skill name "../../etc/passwd"
+```
+Skill names must resolve to a child directory within the skills root.
+</Warning>
+
+## What Gets Installed
+
+The `add` command:
+
+1. Creates the target skills directory if it doesn't exist (`~/.claude/skills` or `~/.codex/skills`)
+2. Downloads all files from `skills/<skill>` in the GitHub repository
+3. Recursively downloads subdirectories (e.g., `agents/`, `references/`)
+4. Creates a `.source.json` metadata file with:
+   ```json
+   {
+     "url": "https://github.com/TailorHub-Mad/ai-skills/tailor-code-review",
+     "owner": "TailorHub-Mad",
+     "repo": "ai-skills",
+     "skill": "tailor-code-review"
+   }
+   ```
+
+<Note>
+The `.source.json` file enables the `update` command to re-download the skill from its original source.
+</Note>
+
+## Exit Codes
+
+- **0** - Success (at least one target installed successfully)
+- **1** - Failure (all targets failed or invalid arguments)

@@ -1,0 +1,237 @@
+---
+title: 'update'
+description: 'Update installed skills to their latest versions'
+---
+
+## Syntax
+
+```bash
+# Update all skills
+npx @tailorhub/skills update [--target claude|codex|both]
+
+# Update a specific skill
+npx @tailorhub/skills update <skill-name> [--target claude|codex|both]
+```
+
+## Description
+
+The `update` command re-downloads skills from their original GitHub sources. It reads the `.source.json` metadata file created during installation to determine where to fetch updates.
+
+**Two modes:**
+- **Update all skills** - Updates every skill with a `.source.json` file in the target(s)
+- **Update specific skill** - Updates only the named skill
+
+## Parameters
+
+<ParamField path="skill-name" type="string" optional>
+  Name of a specific skill to update.
+  
+  If omitted, updates **all** installed skills in the specified target(s).
+  
+  **Example:** `tailor-code-review`
+</ParamField>
+
+## Options
+
+<ParamField path="--target" type="string" default="both">
+  Target environment(s) to update.
+  
+  **Valid values:**
+  - `claude` - Update skills in `~/.claude/skills`
+  - `codex` - Update skills in `~/.codex/skills`
+  - `both` - Update skills in both Claude Code and Codex (default)
+  
+  If not specified, defaults to `both`.
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+
+```bash Update all skills (both targets)
+npx @tailorhub/skills update
+```
+
+```bash Update all skills (Claude Code only)
+npx @tailorhub/skills update --target claude
+```
+
+```bash Update specific skill (both targets)
+npx @tailorhub/skills update tailor-code-review
+```
+
+```bash Update specific skill (Codex only)
+npx @tailorhub/skills update tailor-mermaid-to-drawio --target codex
+```
+
+</CodeGroup>
+
+## Output Messages
+
+### Update all skills - success
+
+```
+[claude] 2 updatable skill(s) found.
+  [claude] updated -> /home/user/.claude/skills/tailor-code-review/
+  [claude] updated -> /home/user/.claude/skills/tailor-mermaid-to-drawio/
+
+[codex] 1 updatable skill(s) found.
+  [codex] updated -> /home/user/.codex/skills/tailor-code-review/
+
+Done. 3 updated, 0 failed.
+Restart Claude Code and Codex to apply changes.
+```
+
+### Update all skills - no updatable skills
+
+```
+[claude] 0 updatable skill(s) found.
+[codex] 0 updatable skill(s) found.
+
+No updatable skills found in the selected target(s).
+Re-install skills with "npx @tailorhub/skills add <url>" to enable updates.
+```
+
+### Update specific skill - success
+
+```
+Updating "tailor-code-review" for targets: claude, codex
+Fetching skill "tailor-code-review" from TailorHub-Mad/ai-skills for claude...
+  Downloading SKILL.md...
+Fetching skill "tailor-code-review" from TailorHub-Mad/ai-skills for codex...
+  Downloading SKILL.md...
+
+Results:
+  [claude] updated -> /home/user/.claude/skills/tailor-code-review/
+  [codex] updated -> /home/user/.codex/skills/tailor-code-review/
+Restart Claude Code and Codex to apply changes.
+```
+
+### Update specific skill - not found
+
+```
+Updating "tailor-code-review" for targets: codex
+
+Results:
+  [codex] not found (tailor-code-review)
+Error: update failed for all requested targets.
+```
+
+### Update specific skill - partial success
+
+```
+Updating "tailor-code-review" for targets: claude, codex
+...
+Results:
+  [claude] updated -> /home/user/.claude/skills/tailor-code-review/
+  [codex] failed: Could not fetch skill from GitHub API: HTTP 404
+Restart Claude Code to apply changes.
+Update completed with partial success.
+```
+
+## Behavior
+
+### Update All Skills
+
+When no skill name is provided:
+
+1. Scans each target's skills directory (`~/.claude/skills`, `~/.codex/skills`)
+2. Lists all subdirectories containing a `.source.json` file
+3. For each skill:
+   - Reads the `.source.json` metadata
+   - Re-downloads all files from the original GitHub source
+   - Overwrites existing files
+4. Prints summary: total updated and failed counts
+
+### Update Specific Skill
+
+When a skill name is provided:
+
+1. For each requested target:
+   - Checks if `.source.json` exists in `~/<target>/skills/<skill-name>/`
+   - Reads the source metadata
+   - Re-downloads all files from GitHub
+   - Overwrites existing files
+2. Prints per-target results
+
+<Note>
+The `update` command re-downloads **every file** in the skill, including nested folders like `agents/` and `references/`.
+</Note>
+
+## Partial Success Behavior
+
+<Note>
+When using `--target both` (or no `--target`), one target may fail while the other succeeds.
+
+- The command is considered **successful** if at least one target succeeds
+- The CLI prints a per-target result summary
+- The command **fails** only if all requested targets fail
+</Note>
+
+## Error Conditions
+
+<Warning>
+**Skill not found:**
+```
+Results:
+  [codex] not found (tailor-code-review)
+```
+Occurs when the skill directory doesn't exist or has no `.source.json` file.
+</Warning>
+
+<Warning>
+**Malformed source metadata:**
+```
+Results:
+  [claude] failed: Could not read source info for "tailor-code-review" in claude: malformed .source.json
+```
+Occurs when `.source.json` exists but contains invalid JSON.
+</Warning>
+
+<Warning>
+**Network/API errors:**
+```
+Results:
+  [codex] failed: Could not fetch skill from GitHub API: HTTP 404
+```
+Occurs when GitHub API cannot fetch the skill (404, rate limits, network errors, etc.).
+</Warning>
+
+<Warning>
+**No skills could be updated:**
+```
+Done. 0 updated, 2 failed.
+Error: no skill could be updated successfully.
+```
+Occurs when all update attempts fail across all targets.
+</Warning>
+
+<Warning>
+**Invalid target value:**
+```
+Error: Invalid --target value "invalid". Use claude, codex, or both.
+```
+Only `claude`, `codex`, or `both` are accepted.
+</Warning>
+
+## Source Metadata
+
+The update command relies on `.source.json` created by the `add` command:
+
+```json
+{
+  "url": "https://github.com/TailorHub-Mad/ai-skills/tailor-code-review",
+  "owner": "TailorHub-Mad",
+  "repo": "ai-skills",
+  "skill": "tailor-code-review"
+}
+```
+
+<Note>
+Skills installed manually (not via the `add` command) will **not** have `.source.json` and cannot be updated using this command.
+</Note>
+
+## Exit Codes
+
+- **0** - Success (at least one skill updated, or no updatable skills found)
+- **1** - Failure (all targets/skills failed or invalid arguments)

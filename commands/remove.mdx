@@ -1,0 +1,208 @@
+---
+title: 'remove'
+description: 'Remove an installed skill from Claude Code and/or Codex'
+---
+
+## Syntax
+
+```bash
+npx @tailorhub/skills remove <skill-name> [--target claude|codex|both]
+```
+
+## Description
+
+The `remove` command deletes a skill directory from your local skills installation. It only removes the specific skill folder (e.g., `~/.codex/skills/<skill-name>`), not the entire skills directory or other skills.
+
+## Parameters
+
+<ParamField path="skill-name" type="string" required>
+  Name of the skill to remove.
+  
+  Must match the skill directory name exactly.
+  
+  **Example:** `tailor-code-review`
+</ParamField>
+
+## Options
+
+<ParamField path="--target" type="string" default="both">
+  Target environment(s) to remove the skill from.
+  
+  **Valid values:**
+  - `claude` - Remove from `~/.claude/skills`
+  - `codex` - Remove from `~/.codex/skills`
+  - `both` - Remove from both Claude Code and Codex (default)
+  
+  If not specified, defaults to `both`.
+</ParamField>
+
+## Examples
+
+<CodeGroup>
+
+```bash Default (both targets)
+npx @tailorhub/skills remove tailor-code-review
+```
+
+```bash Codex only
+npx @tailorhub/skills remove tailor-code-review --target codex
+```
+
+```bash Claude Code only
+npx @tailorhub/skills remove tailor-mermaid-to-drawio --target claude
+```
+
+</CodeGroup>
+
+## Output Messages
+
+### Success (both targets)
+
+```
+Removing "tailor-code-review" for targets: claude, codex
+
+Results:
+  [claude] removed -> /home/user/.claude/skills/tailor-code-review/
+  [codex] removed -> /home/user/.codex/skills/tailor-code-review/
+Restart Claude Code and Codex to apply changes.
+```
+
+### Success (single target)
+
+```
+Removing "tailor-code-review" for targets: codex
+
+Results:
+  [codex] removed -> /home/user/.codex/skills/tailor-code-review/
+Restart Codex to apply changes.
+```
+
+### Not found
+
+```
+Removing "tailor-code-review" for targets: codex
+
+Results:
+  [codex] not found (tailor-code-review)
+Error: remove failed for all requested targets.
+```
+
+### Partial success
+
+```
+Removing "tailor-code-review" for targets: claude, codex
+
+Results:
+  [claude] removed -> /home/user/.claude/skills/tailor-code-review/
+  [codex] not found (tailor-code-review)
+Restart Claude Code to apply changes.
+Remove completed with partial success.
+```
+
+## Behavior
+
+The `remove` command:
+
+1. Resolves the full path to the skill directory for each target
+2. Checks if the directory exists
+3. If exists, recursively deletes the entire skill directory using `fs.rmSync()`
+4. Prints per-target results
+
+<Warning>
+The `remove` command permanently deletes the skill directory and all its contents (including subdirectories like `agents/` and `references/`).
+
+This operation **cannot be undone**.
+</Warning>
+
+## What Gets Removed
+
+Only the specific skill directory is deleted:
+
+```
+~/.codex/skills/tailor-code-review/  <-- DELETED
+├── SKILL.md
+├── config.json
+├── .source.json
+└── agents/
+    └── review-agent.md
+
+~/.codex/skills/                      <-- NOT DELETED
+~/.codex/skills/other-skill/          <-- NOT DELETED
+```
+
+<Note>
+The root skills directories (`~/.claude/skills` and `~/.codex/skills`) and other installed skills are never affected.
+</Note>
+
+## Partial Success Behavior
+
+<Note>
+When using `--target both` (or no `--target`), one target may fail while the other succeeds.
+
+- The command is considered **successful** if at least one target succeeds
+- The CLI prints a per-target result summary
+- The command **fails** only if all requested targets fail
+</Note>
+
+## Error Conditions
+
+<Warning>
+**Skill not found:**
+```
+Results:
+  [codex] not found (tailor-code-review)
+```
+Occurs when the skill directory doesn't exist in the target.
+</Warning>
+
+<Warning>
+**Invalid skill name:**
+```
+Results:
+  [codex] failed: Invalid skill name "../../etc/passwd"
+```
+Skill names must resolve to a child directory within the skills root. Path traversal attempts are blocked.
+</Warning>
+
+<Warning>
+**File system errors:**
+```
+Results:
+  [claude] failed: EACCES: permission denied, rmdir '/home/user/.claude/skills/tailor-code-review'
+```
+Occurs when the skill directory cannot be deleted due to permissions or other file system errors.
+</Warning>
+
+<Warning>
+**Missing skill name:**
+```
+Usage:
+  npx @tailorhub/skills remove <skill-name> [--target claude|codex|both]
+```
+The skill name is required for the `remove` command.
+</Warning>
+
+<Warning>
+**Invalid target value:**
+```
+Error: Invalid --target value "invalid". Use claude, codex, or both.
+```
+Only `claude`, `codex`, or `both` are accepted.
+</Warning>
+
+## Re-installing Removed Skills
+
+To re-install a removed skill, use the `add` command with the original GitHub URL:
+
+```bash
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review
+```
+
+<Note>
+If you don't remember the original URL, check the TailorHub Skills repository or documentation for available skills.
+</Note>
+
+## Exit Codes
+
+- **0** - Success (at least one target removed successfully)
+- **1** - Failure (all targets failed, skill not found in any target, or invalid arguments)

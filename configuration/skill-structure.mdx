@@ -1,0 +1,270 @@
+---
+title: "Skill Directory Structure"
+description: "Understanding how TailorHub skills are organized and tracked"
+---
+
+## Overview
+
+Each TailorHub skill is installed as a directory containing the skill definition, optional subdirectories for specialized content, and metadata for tracking and updates.
+
+## Basic Structure
+
+A minimal skill contains at least a `SKILL.md` file:
+
+```
+tailor-my-skill/
+└── SKILL.md
+```
+
+However, most skills include additional files and directories:
+
+```
+tailor-my-skill/
+├── SKILL.md          # Main skill definition (required)
+├── .source.json      # Source metadata (created by CLI)
+├── AGENTS.md         # Additional instructions (optional)
+├── agents/           # Agent configurations (optional)
+│   └── openai.yaml
+└── references/       # Reference materials (optional)
+    ├── guide-1.md
+    └── guide-2.md
+```
+
+## Core Files
+
+### SKILL.md (Required)
+
+The main skill definition file. It contains:
+
+- **Frontmatter**: Metadata like name, description, and version
+- **Instructions**: Detailed workflow and behavior guidelines
+- **Resources**: References to other files in the skill directory
+
+Example from `tailor-code-review`:
+
+```markdown
+---
+name: tailor-code-review
+description: Agnostic code review for the current git branch...
+version: 1.0.0
+---
+
+# Tailor Code Review
+
+Performs an automated, multi-agent code review...
+```
+
+### .source.json (Auto-generated)
+
+The CLI creates this file when a skill is installed. It tracks the skill's source location for updates.
+
+<Note>
+Never edit `.source.json` manually. It's managed entirely by the CLI.
+</Note>
+
+**Contents:**
+
+```json
+{
+  "url": "https://github.com/TailorHub-Mad/ai-skills/tailor-code-review",
+  "owner": "TailorHub-Mad",
+  "repo": "ai-skills",
+  "skill": "tailor-code-review"
+}
+```
+
+**Purpose:**
+
+- **Source tracking**: Records where the skill was installed from
+- **Update support**: Enables `npx @tailorhub/skills update` to fetch the latest version
+- **Skill identification**: Links the local installation to its remote source
+
+<Accordion title="How .source.json enables updates">
+When you run `update`, the CLI:
+
+1. Reads `.source.json` to get the GitHub owner, repo, and skill path
+2. Fetches the latest version from GitHub
+3. Re-downloads all files (including subdirectories)
+4. Overwrites the existing installation
+5. Updates `.source.json` with the same metadata
+
+Skills installed without the CLI (manually copied) won't have `.source.json` and can't be updated automatically.
+</Accordion>
+
+## Optional Subdirectories
+
+Skills can include subdirectories for specialized content. The CLI preserves the entire directory structure during installation and updates.
+
+### agents/
+
+Contains agent configuration files for multi-agent workflows.
+
+**Example** (`tailor-code-review/agents/openai.yaml`):
+
+```yaml
+model: gpt-4
+temperature: 0.3
+max_tokens: 2000
+```
+
+### references/
+
+Stores reference materials that the skill instructions load dynamically.
+
+**Example** (`tailor-mermaid-to-drawio/references/`):
+
+```
+references/
+├── azure-icons.md    # Azure icon mappings
+└── aws-icons.md      # AWS icon mappings
+```
+
+The skill's `SKILL.md` references these files:
+
+```markdown
+2. Load only the needed icon mapping reference
+- For Azure paths and mappings, read `references/azure-icons.md`
+- For AWS paths and mappings, read `references/aws-icons.md`
+```
+
+<Info>
+Reference files are relative to the skill directory. The AI agent knows to look in the installed skill's location.
+</Info>
+
+## Real-World Examples
+
+### tailor-code-review
+
+A skill with agent configurations and additional instructions:
+
+```
+tailor-code-review/
+├── SKILL.md          # Main skill definition
+├── AGENTS.md         # Detailed workflow instructions
+├── .source.json      # Source metadata (CLI-generated)
+└── agents/
+    └── openai.yaml   # OpenAI agent configuration
+```
+
+**Key features:**
+- Uses `AGENTS.md` for extensive multi-agent orchestration logic
+- Agent config in `agents/` directory
+- CLI tracks source in `.source.json`
+
+### tailor-mermaid-to-drawio
+
+A skill with reference materials:
+
+```
+tailor-mermaid-to-drawio/
+├── SKILL.md          # Main skill definition
+├── .source.json      # Source metadata (CLI-generated)
+├── agents/
+│   └── openai.yaml   # Agent configuration
+└── references/
+    ├── azure-icons.md  # Azure icon mapping reference
+    └── aws-icons.md    # AWS icon mapping reference
+```
+
+**Key features:**
+- Loads cloud-specific references on demand
+- References are provider-specific (Azure vs AWS)
+- Full directory structure preserved during updates
+
+## How Skills Are Identified
+
+The CLI identifies and manages skills using:
+
+1. **Skill name**: Derived from the GitHub URL path (e.g., `tailor-code-review`)
+2. **Target**: The AI environment (`claude` or `codex`)
+3. **Installation path**: Combines target root + skill name
+   - Claude: `~/.claude/skills/<skill-name>/`
+   - Codex: `~/.codex/skills/<skill-name>/`
+
+### Finding Updatable Skills
+
+When you run `update` without arguments, the CLI:
+
+1. Scans each target's skills directory
+2. Looks for subdirectories containing `.source.json`
+3. Updates only those skills that have source metadata
+
+```bash
+$ npx @tailorhub/skills update
+
+[claude] 2 updatable skill(s) found.
+  [claude] updated -> /home/user/.claude/skills/tailor-code-review/
+  [claude] updated -> /home/user/.claude/skills/tailor-mermaid-to-drawio/
+
+[codex] 1 updatable skill(s) found.
+  [codex] updated -> /home/user/.codex/skills/tailor-code-review/
+
+Done. 3 updated, 0 failed.
+```
+
+## Directory Structure During Updates
+
+When the CLI updates a skill, it:
+
+1. **Preserves the directory**: Doesn't delete and recreate
+2. **Re-downloads all files**: Fetches every file from GitHub recursively
+3. **Overwrites existing files**: Ensures you get the latest version
+4. **Maintains subdirectories**: Preserves `agents/`, `references/`, etc.
+5. **Updates .source.json**: Rewrites metadata with the same source info
+
+<Accordion title="What happens to local modifications?">
+**Local changes are overwritten** during updates. The CLI treats the GitHub repository as the source of truth.
+
+If you've modified a skill locally:
+- Your changes will be lost when you run `update`
+- Fork the skill repository instead and install from your fork
+- The `.source.json` will track your fork, allowing you to update from there
+</Accordion>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Don't edit .source.json" icon="ban">
+    The CLI manages this file. Manual edits can break updates.
+  </Card>
+  
+  <Card title="Preserve structure" icon="folder-tree">
+    Keep subdirectories like `agents/` and `references/` intact.
+  </Card>
+  
+  <Card title="Fork for customization" icon="code-branch">
+    If you need to modify a skill, fork it and install from your fork.
+  </Card>
+  
+  <Card title="Use relative paths" icon="link">
+    Reference files should use paths relative to the skill directory.
+  </Card>
+</CardGroup>
+
+## Troubleshooting
+
+### Skill won't update
+
+**Check for `.source.json`:**
+
+```bash
+ls ~/.claude/skills/tailor-code-review/.source.json
+```
+
+If missing, the skill was installed manually. Re-install using the CLI:
+
+```bash
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review
+```
+
+### Malformed .source.json
+
+If you see "malformed .source.json" errors:
+
+1. Delete the skill directory
+2. Re-install using the CLI
+
+```bash
+npx @tailorhub/skills remove tailor-code-review
+npx @tailorhub/skills add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review
+```

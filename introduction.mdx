@@ -1,0 +1,156 @@
+---
+title: Introduction
+description: Install and manage AI skills for Claude Code and Codex with a simple CLI
+---
+
+<div className="relative overflow-hidden bg-gradient-to-br from-[#6366f1] via-[#818cf8] to-[#4f46e5] dark:from-[#4f46e5] dark:via-[#6366f1] dark:to-[#818cf8] py-20">
+  <div className="max-w-5xl mx-auto px-6">
+    <div className="text-center">
+      <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">
+        TailorHub Skills
+      </h1>
+      <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8">
+        Install and manage AI skills for Claude Code and Codex with a single command. Extend your AI coding assistant with powerful, reusable capabilities.
+      </p>
+      <div className="flex flex-wrap gap-4 justify-center">
+        <a 
+          href="/quickstart" 
+          className="inline-flex items-center px-6 py-3 rounded-lg bg-white text-[#6366f1] font-semibold hover:bg-gray-100 transition-colors no-underline"
+        >
+          Get Started
+        </a>
+        <a 
+          href="/skills/overview" 
+          className="inline-flex items-center px-6 py-3 rounded-lg border-2 border-white/30 bg-white/10 text-white font-semibold hover:bg-white/20 transition-colors no-underline"
+        >
+          Explore Skills
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-4">Quick start</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Get up and running with TailorHub Skills in minutes
+  </p>
+
+  <Steps>
+    <Step title="Install a skill">
+      Run the CLI with npx to install any skill from the TailorHub repository:
+
+      ```bash
+      npx @tailorhub/skills@latest add https://github.com/TailorHub-Mad/ai-skills/tailor-code-review
+      ```
+
+      By default, the skill installs to both Claude Code and Codex. Use `--target` to specify a single environment.
+    </Step>
+
+    <Step title="Restart your AI coding assistant">
+      After installing a skill, restart Claude Code or Codex to load the new capabilities.
+
+      <Note>
+        Skills are installed to `~/.claude/skills/` and `~/.codex/skills/` by default.
+      </Note>
+    </Step>
+
+    <Step title="Use the skill">
+      Invoke the skill by name in your AI assistant. For example, with the code review skill installed:
+
+      ```
+      Review my current branch with tailor-code-review
+      ```
+
+      The AI assistant will execute the skill workflow and provide results.
+    </Step>
+  </Steps>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-4">Key features</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Everything you need to manage AI skills across environments
+  </p>
+
+  <CardGroup cols={2}>
+    <Card title="One-command installation" icon="download" href="/commands/add">
+      Install skills directly from GitHub URLs with automatic directory setup and source tracking
+    </Card>
+    <Card title="Multi-environment support" icon="layer-group" href="/configuration/targets">
+      Deploy skills to Claude Code, Codex, or both with a single flag
+    </Card>
+    <Card title="Easy updates" icon="arrows-rotate" href="/commands/update">
+      Update all installed skills or target specific ones with automatic re-download
+    </Card>
+    <Card title="Skill library" icon="book-open" href="/skills/overview">
+      Pre-built skills for code review, diagram conversion, and more
+    </Card>
+  </CardGroup>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <h2 className="text-3xl font-semibold text-gray-900 dark:text-white mb-4">Available skills</h2>
+  <p className="text-base text-gray-600 dark:text-gray-400 mb-8">
+    Pre-built capabilities ready to install
+  </p>
+
+  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <a 
+      href="/skills/tailor-code-review" 
+      className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#6366f1] dark:hover:border-[#6366f1] overflow-hidden transition-colors no-underline bg-white dark:bg-[#1a1d27]"
+    >
+      <div className="p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          Code Review
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Automated multi-agent code review for git branches. Detects bugs, security vulnerabilities, and guideline violations.
+        </p>
+        <div className="flex items-center text-sm text-[#6366f1] group-hover:text-[#4f46e5] font-medium">
+          Learn more
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+
+    <a 
+      href="/skills/tailor-mermaid-to-drawio" 
+      className="group block rounded-2xl border border-gray-200 dark:border-[#27272a] hover:border-[#6366f1] dark:hover:border-[#6366f1] overflow-hidden transition-colors no-underline bg-white dark:bg-[#1a1d27]"
+    >
+      <div className="p-6">
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+          Mermaid to Draw.io
+        </h3>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+          Convert Mermaid diagrams to polished Draw.io XML with Azure/AWS icons and enterprise layout conventions.
+        </p>
+        <div className="flex items-center text-sm text-[#6366f1] group-hover:text-[#4f46e5] font-medium">
+          Learn more
+          <svg className="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div className="mt-16 mb-16 max-w-5xl mx-auto px-6">
+  <div className="rounded-2xl bg-gradient-to-br from-[#6366f1] to-[#4f46e5] p-8 text-center">
+    <h2 className="text-3xl font-semibold text-white mb-4">
+      Ready to extend your AI assistant?
+    </h2>
+    <p className="text-lg text-white/90 mb-6 max-w-2xl mx-auto">
+      Install your first skill in seconds and unlock powerful new capabilities for your coding workflow.
+    </p>
+    <a 
+      href="/quickstart" 
+      className="inline-flex items-center px-6 py-3 rounded-lg bg-white text-[#6366f1] font-semibold hover:bg-gray-100 transition-colors no-underline"
+    >
+      Get Started
+    </a>
+  </div>
+</div>

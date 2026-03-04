@@ -1,0 +1,88 @@
+---
+title: Skills Catalog
+description: Browse and install TailorHub skills for Claude Code and Codex
+---
+
+# Available Skills
+
+TailorHub Skills are installable extensions that add specialized capabilities to Claude Code and Codex. Each skill provides a focused workflow for common development tasks.
+
+## Installation
+
+All skills are installed via the `@tailorhub/skills` CLI:
+
+```bash
+npx @tailorhub/skills@latest add <skill-url>
+```
+
+### Installation Targets
+
+By default, skills install to both Claude Code and Codex. You can customize this:
+
+- `--target claude` - Install only in Claude Code (`~/.claude/skills`)
+- `--target codex` - Install only in Codex (`~/.codex/skills`)
+- `--target both` - Install in both (default)
+
+<Note>
+After installing a skill, restart Claude Code or Codex to apply changes.
+</Note>
+
+## Skill Catalog
+
+<CardGroup cols={2}>
+  <Card title="tailor-code-review" icon="magnifying-glass" href="/skills/tailor-code-review">
+    Agnostic code review for the current git branch. Detects bugs, security vulnerabilities, and critical issues.
+  </Card>
+  
+  <Card title="tailor-mermaid-to-drawio" icon="diagram-project" href="/skills/tailor-mermaid-to-drawio">
+    Converts Mermaid architecture diagrams into polished Draw.io XML using Azure/AWS icon libraries and enterprise layout conventions.
+  </Card>
+</CardGroup>
+
+## Managing Skills
+
+### Update Skills
+
+Update all installed skills:
+
+```bash
+npx @tailorhub/skills@latest update
+```
+
+Update a specific skill:
+
+```bash
+npx @tailorhub/skills@latest update tailor-code-review
+```
+
+Update only for a specific target:
+
+```bash
+npx @tailorhub/skills@latest update --target claude
+```
+
+### Remove Skills
+
+Remove a skill from both targets:
+
+```bash
+npx @tailorhub/skills@latest remove tailor-code-review
+```
+
+Remove from a specific target only:
+
+```bash
+npx @tailorhub/skills@latest remove tailor-code-review --target codex
+```
+
+<Warning>
+The `remove` command deletes the skill folder but preserves other skills and the root skills directory.
+</Warning>
+
+## Partial Success Behavior
+
+When using `--target both`, one target may fail while the other succeeds:
+
+- The command succeeds if at least one target succeeds
+- Per-target results are displayed in the output
+- The command fails only if all requested targets fail
