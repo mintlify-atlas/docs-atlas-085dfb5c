@@ -1,0 +1,57 @@
+{
+  "projectType": "cli-tool",
+  "projectName": "TailorHub Skills",
+  "projectDescription": "A CLI tool to install, update, and manage AI skills for Claude Code and Codex.",
+  "theme": "mint",
+  "primaryColor": "#6366f1",
+  "lightColor": "#818cf8",
+  "darkColor": "#4f46e5",
+  "navigation": {
+    "groups": [
+      {
+        "group": "Get Started",
+        "pages": [
+          "introduction",
+          "quickstart"
+        ]
+      },
+      {
+        "group": "CLI Commands",
+        "pages": [
+          "commands/add",
+          "commands/update",
+          "commands/remove"
+        ]
+      },
+      {
+        "group": "Available Skills",
+        "pages": [
+          "skills/overview",
+          "skills/tailor-code-review",
+          "skills/tailor-mermaid-to-drawio"
+        ]
+      },
+      {
+        "group": "Configuration",
+        "pages": [
+          "configuration/targets",
+          "configuration/skill-structure"
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Install AI skills from GitHub URLs with a single command",
+    "Update all installed skills or specific skills across targets",
+    "Support for both Claude Code and Codex environments",
+    "Automatic skill directory management and source tracking",
+    "Partial success handling for multi-target operations"
+  ],
+  "publicApiSurface": [
+    "npx @tailorhub/skills add <github-skill-url> [--target claude|codex|both]",
+    "npx @tailorhub/skills update [skill-name] [--target claude|codex|both]",
+    "npx @tailorhub/skills remove <skill-name> [--target claude|codex|both]",
+    "tailor-code-review skill - Automated code review for git branches",
+    "tailor-mermaid-to-drawio skill - Convert Mermaid diagrams to Draw.io XML"
+  ]
+}
